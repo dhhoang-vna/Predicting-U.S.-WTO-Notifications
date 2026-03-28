@@ -1,0 +1,262 @@
+% !TEX program = lualatex
+% Compile with: lualatex poster_2.tex
+
+\documentclass[20pt, a0paper, portrait]{tikzposter}
+
+% ---------- Engine-safe fonts ----------
+\usepackage{fontspec} % requires lualatex or xelatex
+\setmainfont[SmallCapsFont={Latin Modern Roman Caps}]{Latin Modern Roman}
+\setsansfont{Latin Modern Sans}
+\tracinglostchars=0
+
+% ---------- Graphics ----------
+\usepackage{graphicx}
+\graphicspath{{./}{figures/}{img/}} % add folders if needed
+
+% Counter for figure numbering
+\newcounter{postfigure}
+\setcounter{postfigure}{0}
+
+% Non-floating poster figures + compile even if image missing
+\newcommand{\posterfig}[3][0.8\linewidth]{%
+  \stepcounter{postfigure}%
+  \vspace{8pt}%
+  \begin{center}
+    \IfFileExists{#2}{%
+      \includegraphics[width=#1]{#2}%
+    }{%
+      \fbox{\parbox{0.9\linewidth}{\centering Missing image file: \texttt{#2}}}%
+    }\\[-3pt]
+    {\footnotesize \textbf{Figure \thepostfigure:} #3}
+  \end{center}%
+  \vspace{6pt}%
+}
+
+% ---------- Math / tables ----------
+\usepackage{amsmath, amssymb, bm}
+\usepackage{unicode-math}
+\setmathfont{Latin Modern Math}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{adjustbox}
+
+% ---------- Lists / links ----------
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=*,noitemsep,topsep=2pt,parsep=0pt,partopsep=0pt}
+\setlist[enumerate]{leftmargin=*,noitemsep,topsep=2pt,parsep=0pt,partopsep=0pt}
+\usepackage{hyperref}
+
+% ---------- tikz for internal figures ----------
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage[most]{tcolorbox}
+\newtcbox{\codebox}{
+  colback=gray!15,
+  colframe=gray!15,
+  boxrule=0pt,
+  arc=3pt,
+  left=3pt,right=3pt,top=2pt,bottom=2pt
+}
+
+% ---------- Layout tightening (no wording changes) ----------
+\renewcommand{\baselinestretch}{0.95}
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{0pt}
+
+\makeatletter
+\newcommand{\settpifdefined}[2]{\@ifundefined{#1}{}{\setlength{\csname #1\endcsname}{#2}}}
+\makeatother
+\settpifdefined{TPboxrulesize}{0pt}
+\settpifdefined{TPshadowradius}{0pt}
+\settpifdefined{TPinnersep}{4pt}
+\settpifdefined{TPinnerrightsep}{4pt}
+\settpifdefined{TPinnerleftsep}{4pt}
+\settpifdefined{TPtopsep}{1pt}
+\settpifdefined{TPbottomsep}{1pt}
+\settpifdefined{TPblocktopsep}{0pt}
+\settpifdefined{TPblockbottomsep}{0pt}
+
+% ---------- tikzposter theme ----------
+\usetheme{Simple}
+\usecolorstyle{Default}
+\definecolor{prismNavy}{HTML}{0B1F33}
+\definecolor{prismBlue}{HTML}{1E88E5}
+\definecolor{prismCyan}{HTML}{1FB6FF}
+\definecolor{prismSand}{HTML}{F2F5F8}
+\definecolor{prismInk}{HTML}{0B0F1A}
+\colorlet{backgroundcolor}{prismSand}
+\colorlet{titlebgcolor}{prismNavy}
+\colorlet{titlefgcolor}{white}
+\colorlet{blocktitlebgcolor}{prismBlue}
+\colorlet{blocktitlefgcolor}{prismInk}
+\colorlet{blockbodybgcolor}{white}
+\colorlet{blockbodyfgcolor}{prismInk}
+
+% ---------- Title box sizing ----------
+\makeatletter
+\@ifundefined{titleheight}{}{\setlength{\titleheight}{15cm}}
+\@ifundefined{titlewidth}{}{\setlength{\titlewidth}{0.98\paperwidth}}
+\makeatother
+
+% ---------- Poster metadata ----------
+\title{\parbox{0.94\linewidth}{\centering Predicting Import-Reducing U.S. SPS/TBT Notifications from Regulatory Text}}
+\author{}
+\institute{Hung D. Hoang \quad | \quad University Paris 1 Panth\'eon-Sorbonne \quad | \quad Big Data: Text Analysis, March 2026}
+
+\begin{document}
+\small
+\baselinestretch
+\maketitle%
+% ===================== PAGE 1 =====================
+\begin{columns}
+
+% ===================== Column 1 =====================
+\column{0.33}
+
+\block{Motivation \& Research Questions}{
+Sanitary and phytosanitary measures (SPS) and technical barriers to trade (TBT) are central to market access in goods trade, but they are highly heterogeneous. Some notifications are mainly informational updates, while others impose testing, certification, traceability, or documentation requirements that can be binding and import-reducing. Therefore, this project primarily asks whether U.S. notifications submitted to the WTO under SPS/TBT agreements predict realized import disruptions for Southeast Asian exporters. In addition, it explores whether the semantic content of regulatory text adds predictive power beyond exporter identity, and whether the products with the highest predicted regulatory risk are concentrated in structurally central sectors of exporters' domestic production networks.
+}
+
+\block{Related literature}{
+This project contributes to several strands of literature. First, building on work on non-tariff measures, particularly SPS/TBT average effects (Disdier et al., 2008; Fontagné and Orefice, 2018), I extend this strand by shifting from estimation to prediction: which specific notifications generate measurable import disruption, conditional on regulatory text content. Second, following work on shock propagation in input-output (IO) networks (Acemoglu et al., 2012; Carvalho, 2014; Acemoglu and Tahbaz-Salehi, 2025), I examine whether predicted high-risk notifications are concentrated in IO-central sectors, which could suggest potential propagation of trade disruptions through domestic supply chains.
+}
+
+\block{Data}{
+\textbf{Notifications}: U.S. SPS and TBT notifications submitted to the WTO (2010--2025) are drawn from the ePing SPS \& TBT Platform. The corpus is dominated by TBT and SPS notifications; both are pooled because they can restrict access for the same targeted exporters through complementary legal mechanisms.
+
+\posterfig[0.8\linewidth]{notif_frequency.png}{Notification frequency over time}
+
+\textbf{Trade panel}: Monthly U.S. import values by HS4 product and exporting country come from US International Trade Commission, for 8 Southeast Asian developing exporters (Cambodia, Indonesia, Laos, Malaysia, Myanmar, Philippines, Thailand, and Vietnam) across 964 HS4 codes.
+
+\vspace{10pt}
+
+\textbf{Labeled dataset}: Notifications were linked to HS4 codes via a weighted ICS5-to-HS4 concordance and matched to the trade panel. The final analytic dataset contains 52,033 observations $\text{notification} \times \text{HS4} \times \text{exporter}$ ($n \times p \times e$) drawn from 2,408 unique notifications, 357 HS4 codes, and 8 countries, spanning 2013--2025 at an overall positive rate of 18.1\%.
+
+\vspace{10pt}
+
+\textbf{IO exposure data} (Mancini et al., 2024): Each $n \times p \times e$ triple is mapped from HS4 to ISIC 2-digit via a share-weighted concordance (Liao et al., 2021), then merged with a $\text{exporter} \times \text{ISIC2}$ IO exposure table. I use two pre-computed indicators: production-network centrality and downstream dependence, aggregated back to the $n \times p \times e$ level using concordance shares. Both have 20.3\% missingness in the 2024--2025 test set; IO coverage is 79.7\%.
+}
+
+\block{Outcome Variable}{
+For each $n \times p \times e$ triple, define $Y=1$ if in the six months after notification $n$, U.S. imports of the targeted HS4 product bundle from exporter $e$ fall by at least 20 log-points relative to the overall U.S. import change for that HS4 product bundle and the exporter $e$'s overall import change across all products.
+
+\vspace{10pt}
+
+This two-way adjustment removes broad product-level shocks and exporter-wide disruptions (e.g., logistics or macro shocks); hence, the label better captures notification-specific trade disruptions. The baseline 20 log-point threshold focuses on economically meaningful declines and reduces noise from small fluctuations, with robustness checks of other thresholds (see Appendix F). The six-month window allows for compliance, certification, and shipment-cycle adjustments, aligning the label with the policy-relevant objective of identifying notifications likely to trigger substantial import reductions for specific exporter-product pairs.
+
+\posterfig[0.8\linewidth]{outcome.png}{Outcome construction and labeling logic}
+
+}
+
+% ===================== Column 2 =====================
+\column{0.34}
+
+\block{Temporal Design}{
+The research question is fundamentally predictive, therefore a strictly time-based design is employed. Notifications are split at the notification level, ensuring no text appears in both training and test sets. This prevents leakage from repeated text across partitions. Within the training sample, model tuning uses 5-fold \texttt{GroupKFold} cross-validation by notification ID.
+
+\begin{center}
+\small
+\textbf{Table 1: Dataset Summary by Regime}\\[-2pt]
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{lcccc}
+\toprule
+Regime & Period & Triples & Notifications & Pos.\ rate \\
+\midrule
+Pretrain pool     & 2010--2018 & 13,942 & 733  & 17.8\% \\
+Bridge            & 2019       & 4,240  & 191  & 17.3\% \\
+Fine-tune / train & 2020--2023 & 23,447 & 1,056 & 18.6\% \\
+\textbf{Final test} & \textbf{2024--2025} & \textbf{10,404} & \textbf{428} & \textbf{18.0\%} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{center}
+
+\vspace{6pt}
+
+The final evaluation is on a fully out-of-sample test set. The positive rate is stable across periods, which limits concern that performance differences are driven by major label drift rather than model quality.
+}
+
+\block{Models}{
+I compare five models, chosen to separate exporter heterogeneity from textual signal and to distinguish simple lexical features from deeper semantic structure:
+\begin{enumerate}
+  \item Country-only baseline: Logistic regression using exporter dummies only. This tests how much predictive power comes from persistent cross-country heterogeneity.
+  \item Text-only TF-IDF: Elastic-net logistic regression on unigram/bigram TF-IDF features. This captures keyword frequency but not semantic structure.
+  \item TF-IDF + Country: TF-IDF features augmented with exporter dummies.
+  \item SBERT + Country: Sentence embeddings combined with exporter dummies, followed by logistic regression.
+  \item DistilBERT: End-to-end fine-tuning of a transformer language model, pretrained on earlier notifications and fine-tuned on the training period.
+\end{enumerate}
+}
+
+\block{Results}{
+All metrics computed on the 2024–2025 test set (n = 10,404; k = 1,041 at top 10\%):
+
+\vspace{6pt}
+
+\begin{center}
+\small
+\textbf{Table 2: Model Performance Comparison}
+\vspace{4pt}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{lcccc}
+\toprule
+Model & ROC-AUC & Avg.\ Precision & Precision@10\% & Recall@10\% \\
+\midrule
+\textbf{DistilBERT}      & \textbf{0.622} & \textbf{0.242} & \textbf{0.272} & \textbf{0.152} \\
+SBERT + Country          & 0.577          & 0.220          & 0.254          & 0.141 \\
+Country-only             & 0.579          & 0.214          & 0.244          & 0.136 \\
+TF-IDF + Country         & 0.574          & 0.218          & 0.234          & 0.131 \\
+TF-IDF text-only         & 0.497          & 0.178          & 0.176          & 0.098 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{center}
+
+\vspace{6pt}
+
+\textbf{Main findings}: First, text-only TF-IDF is essentially non-predictive, confirming that bag-of-words keyword frequency carries little signal on its own. Second, country identity alone outperforms the text-only specification, indicating strong cross-exporter heterogeneity in the probability of post-notification trade disruption. Third, DistilBERT performs best, showing that useful information in notification text is primarily semantic rather than lexical.
+
+\posterfig[0.8\linewidth]{precision_recall_curve.png}{Precision-Recall curves by model on the 2024--2025 test set}
+
+On the test set, DistilBERT achieves ROC-AUC of 0.622 and Precision@10\% of 0.272, outperforming all other specifications. Among the top 10\% highest-risk cases, DistilBERT identifies substantially more positives than other models. Relative to the text-only baseline, DistilBERT improves Average Precision by approximately 36\%, and achieves a 51\% lift in top-decile precision relative to the base rate of 17.95\%.
+\posterfig[0.8\linewidth]{ranking_quality.png}{Horizontal bar chart of Precision@Top-10\% ("Ranking Quality in Highest-Risk Segment"), ranked descending. DistilBERT leads at 0.272; TF-IDF text-only trails at 0.176.}
+}
+
+% ===================== Column 3 =====================
+\column{0.33}
+
+\block{Robustness}{
+Using alternative outcome thresholds ($\theta=0.10,0.15,0.20,0.25$) with 1 epoch across multiple seeds, the core ranking result remains stable: DistilBERT stays top-tier in Average Precision (0.285, 0.246, 0.208, 0.185), country-only remains unexpectedly strong in ROC-AUC (about 0.56--0.58), and text-only TF-IDF is consistently weakest. Precision@10\% also declines smoothly as the threshold becomes stricter rather than collapsing, indicating the baseline result is not driven by one specific label cutoff. Overall, robustness checks support the main conclusion that semantic models add meaningful predictive signal beyond sparse lexical features, and exporter heterogeneity remains a major source of performance.
+}
+
+
+\block{IO Extension}{
+This is a descriptive proof-of-concept extension to assess where predicted high-risk notifications are concentrated in the production network, using HS4-ISIC concordances and country-sector IO measures. High-risk notifications are associated with higher centrality and downstream dependence, but the relationship is modest and heterogeneous across exporters.
+
+\posterfig[0.8\linewidth]{io_1.png}{IO centrality and downstream dependence for high-risk vs. rest triples}
+
+The violin plots above compare the centrality of the sectors in the production network for high-risk triples (within-exporter top-decile DistilBERT score) versus the rest, faceted by Vietnam and Thailand - the two largest exporters in the final test set. High predicted-risk triples are more likely to concentrate in sectors with higher network centrality. A similar pattern appears for downstream dependence (see Appendix D). This provides descriptive evidence that disruptions in these sectors may propagate through domestic supply chains.
+}
+
+\block{Discussion}{
+The empirical results point to three main conclusions. First, exporter identity dominates notification text as a baseline predictor, which is consistent with cross-country heterogeneity in compliance capacity and trade vulnerability. Second, fine-tuning (DistilBERT) extracts genuine predictive signal from notification text that bag-of-words and even sentence embeddings miss, demonstrating that semantic structure, not keyword frequency, is the relevant dimension of regulatory text. Third, the IO extension reveals that high predicted regulatory risk is not randomly distributed across the production network: it clusters in sectors with high centrality and downstream dependence in both Vietnam and Thailand, implying that realized U.S. SPS/TBT barriers would indicates exposure consistent with broader spillovers.
+\vspace{10pt}
+
+However, this framework is predictive rather than causal. High-risk notifications may capture pre-existing bilateral trade deterioration, not only regulatory effects, and pre-trends within (notification \times product \times exporter) cells are not explicitly modeled. The 3/6-month outcome windows may also miss slower compliance dynamics that emerge over 12--24 months. Future work should therefore test alternative labeling schemes (including continuous outcomes and longer windows), move from descriptive IO correlations to causal identification of downstream propagation, and rerun robustness with longer DistilBERT schedules (e.g., 5 epochs across multiple seeds) to reduce training-noise uncertainty.
+}
+
+\block{References}{
+\fontsize{18}{21}\selectfont
+\begin{enumerate}[leftmargin=*,itemsep=0.35em,topsep=0.2em]
+  \item Acemoglu, D., Carvalho, V. M., Ozdaglar, A., \& Tahbaz-Salehi, A. (2012). The network origins of aggregate fluctuations. \textit{Econometrica, 80}(5), 1977--2016.
+  \item Acemoglu, D., \& Tahbaz-Salehi, A. (2025). The macroeconomics of supply chain disruptions. \textit{Review of Economic Studies, 92}(2), 656--695.
+  \item Carvalho, V. M. (2014). From micro to macro via production networks. \textit{Journal of Economic Perspectives, 28}(4), 23--48.
+  \item Disdier, A.-C., Fontagné, L., \& Mimouni, M. (2008). The impact of regulations on agricultural trade: Evidence from SPS and TBT agreements. \textit{American Journal of Agricultural Economics, 90}(2), 336--350.
+  \item Fontagné, L., \& Orefice, G. (2018). Let's try next door: Technical barriers to trade and multi-destination firms. \textit{European Economic Review, 101}, 643--663.
+  \item Liao, S., Kim, I. S., Miyano, S., \& Zhang, H. (2021). \textit{concordance: Product concordance} (R package). Comprehensive R Archive Network. \url{https://CRAN.R-project.org/package=concordance}
+  \item Mancini, M., Rojas-Romagosa, H., \& others. (2024). Positioning in global value chains: World map and indicators. \textit{World Bank Economic Review}.
+\end{enumerate}
+}
+
+\end{columns}
+
+\end{document}

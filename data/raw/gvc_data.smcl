@@ -1,0 +1,76 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}D:\1. M2 Development Economics\2. Big Data Text\Project\gvc_data.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res}22 Feb 2026, 11:35:02
+{txt}
+{com}. 
+. 
+. import delimited "D:\1. M2 Development Economics\2. Big Data Text\Project\io_sect_isic2_crosswalk.csv", clear varnames(1)
+{res}{txt}(encoding automatically selected: ISO-8859-1)
+{res}{text}(3 vars, 324 obs)
+
+{com}. sort source sect
+{txt}
+{com}. tempfile xwalk
+{txt}
+{com}. save `xwalk'
+{txt}{p 0 4 2}
+file {bf}
+C:\Users\DGC\AppData\Local\Temp\ST_5bc0_000001.tmp{rm}
+saved
+as .dta format
+{p_end}
+
+{com}. 
+. use "D:\1. M2 Development Economics\2. Big Data Text\Project\gvc_data.dta", clear
+{txt}
+{com}. keep if inlist(country, "VNM","THA","IDN","MYS","PHL","MMR","LAO","KHM","TLS")
+{txt}(358,464 observations deleted)
+
+{com}. keep if inrange(t, 2015, 2019)
+{txt}(19,779 observations deleted)
+
+{com}. drop if missing(country) | missing(source) | missing(sect) | missing(t)
+{txt}(83 observations deleted)
+
+{com}. 
+. isid country source sect t
+{txt}
+{com}. 
+. joinby source sect using `xwalk'
+{txt}
+{com}. 
+. collapse (mean) upstreamness downstreamness u_n u_d d_n d_d, by(country isic2)
+{res}{txt}
+{com}. 
+. * Downstream dependence
+. gen dd_logU = log(upstreamness)
+{txt}(3 missing values generated)
+
+{com}. 
+. * IO centrality 
+. gen centrality = exp(-abs(log(upstreamness) - log(downstreamness)))
+{txt}(3 missing values generated)
+
+{com}. 
+. export delimited using "io_country_isic2_preavg.csv", replace
+{res}{txt}file {bf:io_country_isic2_preavg.csv} saved
+
+{com}. save "io_country_isic2_preavg.dta", replace
+{txt}{p 0 4 2}
+file {bf}
+io_country_isic2_preavg.dta{rm}
+saved
+{p_end}
+
+{com}. 
+. log close
+      {txt}name:  {res}<unnamed>
+       {txt}log:  {res}D:\1. M2 Development Economics\2. Big Data Text\Project\gvc_data.smcl
+  {txt}log type:  {res}smcl
+ {txt}closed on:  {res}22 Feb 2026, 11:35:04
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}

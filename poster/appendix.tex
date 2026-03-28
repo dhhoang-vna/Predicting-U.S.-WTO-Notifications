@@ -1,0 +1,275 @@
+% !TEX program = lualatex
+% Compile with: lualatex appendix_a4.tex
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{setspace}
+
+\graphicspath{{./}{figures/}{img/}}
+\setstretch{1.1}
+
+% Safe figure macro for missing files
+\newcommand{\appfig}[3][0.9\linewidth]{%
+  \begin{figure}[H]
+    \centering
+    \IfFileExists{#2}{%
+      \includegraphics[width=#1]{#2}
+    }{%
+      \fbox{\parbox{0.85\linewidth}{\centering Missing image file: \texttt{#2}}}
+    }
+    \caption{#3}
+  \end{figure}
+}
+
+\title{Appendix: Complementary Evidence for\\
+Predicting Import-Reducing U.S. SPS/TBT Notifications}
+\author{Hung D. Hoang}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+
+\section*{Appendix A. Data Construction and Outcome Definition}
+
+\subsection*{A.1 Data pipeline and unit of analysis}
+The empirical workflow follows four preprocessing stages before model estimation: (i) notification cleaning and standardization, (ii) monthly U.S. import panel construction at the HS4-exporter level, (iii) notification-product exposure mapping, and (iv) event-level label construction. The final supervised unit is a notification-product-exporter triple, denoted by $(n,p,e)$.
+
+The analysis sample contains 52,033 observations, 2,408 notifications, 357 HS4 products, and 8 exporters. All train-test partitions are performed at the notification level to avoid leakage.
+
+\subsection*{A.2 Baseline outcome label}
+Let $t_n$ be the notification month, and let $M_{pe,t}$ denote U.S. imports of product $p$ from exporter $e$ at month $t$. The six-month post-notification change is
+\[
+\Delta \log M_{pe,[t_n,t_n+6]} = \log(1 + M_{pe,t_n+6}) - \log(1 + M_{pe,t_n}).
+\]
+Define product- and exporter-adjusted import changes as
+\[
+\Delta^{\mathrm{HS4}}_{npe} = \Delta \log M_{pe,[t_n,t_n+6]} - \Delta \log M_{p,[t_n,t_n+6]},
+\]
+\[
+\Delta^{\mathrm{EXP}}_{npe} = \Delta \log M_{pe,[t_n,t_n+6]} - \Delta \log M_{e,[t_n,t_n+6]}.
+\]
+The baseline binary outcome is
+\[
+Y_{npe} = \mathbf{1}\left\{\Delta^{\mathrm{HS4}}_{npe} \le \tau \text{ and } \Delta^{\mathrm{EXP}}_{npe} \le \tau\right\},
+\]
+with threshold $\tau = -0.2231$ (20 log-points). The positive-label rate is $\Pr(Y_{npe}=1)=0.1814$.
+
+\subsection*{A.3 Distribution diagnostics for adjusted changes}
+\begin{table}[htbp]
+\centering
+\caption{Distribution of adjusted import-change measures}
+\label{tab:label-quantiles}
+\begin{tabular}{lcc}
+\toprule
+Quantile & $\Delta^{\mathrm{HS4}}_{npe}$ & $\Delta^{\mathrm{EXP}}_{npe}$ \\
+\midrule
+0.10 & -0.7388 & -0.8907 \\
+0.25 & -0.2453 & -0.3750 \\
+0.50 & \phantom{-}0.0000 & \phantom{-}0.0216 \\
+0.75 & \phantom{-}0.2719 & \phantom{-}0.4664 \\
+0.90 & \phantom{-}0.8376 & \phantom{-}1.1086 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:label-quantiles} shows that the baseline threshold lies in the left tail but is not an extreme outlier cutoff.
+
+\section*{Appendix B. Predictive Design and Main Results}
+
+\subsection*{B.1 Evaluation design}
+The chronological split is: pretrain (2010--2018), bridge (2019), train/fine-tune (2020--2023), and final test (2024--2025). Baselines are tuned with grouped cross-validation by notification. DistilBERT is trained in stages with class weighting under weighted binary cross-entropy.
+
+Because the task is a rare-event ranking problem, the main metrics are ROC--AUC, Average Precision (AP), Precision@Top10\%, and Recall@Top10\%.
+
+\subsection*{B.2 Model comparison on final test set}
+Main-test ranking results are reported in the poster. For completeness, the best model remains DistilBERT, with improvements concentrated in Average Precision and right-tail precision relative to baseline alternatives.
+
+DistilBERT is the best-performing specification across all reported ranking metrics. Relative to the text-only TF--IDF baseline, AP improves by approximately
+\[
+\frac{0.2415 - 0.1776}{0.1776} \approx 0.36,
+\]
+or 36\%. The final-test base rate is 0.1795, so top-decile precision implies a lift of
+\[
+\frac{0.2719}{0.1795} \approx 1.51.
+\]
+
+\subsection*{B.3 Interpretation}
+Two substantive points follow. First, richer language representations improve risk ranking relative to sparse lexical baselines. Second, the strong country-only baseline indicates that exporter heterogeneity is an important component of predictive signal.
+
+\section*{Appendix C. Supplementary Prediction Diagnostics}
+
+\subsection*{C.1 Precision-recall and ROC profiles}
+\appfig{class_separation.png}{Class-separation diagnostic for predicted scores (supplementary).}
+\appfig{avg_exposure.png}{Average exposure diagnostic over time in the merged panel (supplementary).}
+\appfig{roc_auc_curve.png}{ROC curves by model on the 2024--2025 test set}
+
+
+\subsection*{C.2 High-risk ranking quality}
+\appfig{exporter_dynamics.png}{Exporter-level dynamics diagnostic (supplementary).}
+
+\subsection*{C.3 Label logic and notification dynamics}
+\appfig{io_2.png}{Additional supplementary IO diagnostic figure.}
+
+\section*{Appendix D. Input-Output (IO) Extension}
+
+\subsection*{D.1 Pre-test IO exposure construction}
+IO exposure is computed from Mancini et al.\ (2024) global value chain data on upstreamness and downstreamness indices. The construction workflow is:
+\begin{enumerate}
+  \item Import Mancini et al.\ baseline measures $u$ (upstreamness) and $d$ (downstreamness) by source country and HS sector.
+  \item Filter observations to the 8 Southeast Asian exporters and the pre-test-set window (2015--2019), ensuring complete country-sector coverage.
+  \item Merge the HS sector data with HS4-to-ISIC 2-digit concordance tables.
+  \item Collapse to the country-ISIC2 level, computing period-average upstreamness and downstreamness.
+  \item Construct two IO metrics at the sector-country level:
+  \begin{itemize}
+    \item Downstream Dependence: $\mathrm{DD}_{ej} = \log(u_{ej})$, measuring how far upstream a sector is in global value chains.
+    \item Centrality: $\mathrm{Centrality}_{ej} = \exp\left(-\left|\log(u_{ej}) - \log(d_{ej})\right|\right)$, capturing proximity to balanced positioning in supply chains.
+  \end{itemize}
+\end{enumerate}
+The pre-averaged IO data is stored at the country-ISIC2 level and subsequently merged into the final-test sample via HS4-ISIC shares.
+
+\subsection*{D.1a Cross-walk and notification-level aggregation}
+Starting from final-test risk scores $\hat p_{npe}$, each observation is linked to ISIC sectors through HS4-ISIC concordances with shares $s_{npej}$, where $\sum_j s_{npej}=1$. IO variables are aggregated as share-weighted means:
+\[
+\mathrm{Centrality}_{npe}=\sum_j s_{npej}\,\mathrm{Centrality}_{ej},
+\qquad
+\mathrm{DD}_{npe}=\sum_j s_{npej}\,\mathrm{DD}_{ej}.
+\]
+
+The IO-augmented final-test sample has 10,404 observations with approximately 79.7\% IO coverage.
+
+\subsection*{D.2 High-risk definition}
+The main specification uses a within-exporter top-decile rule:
+\[
+\mathrm{HighRisk}_{npe}=\mathbf{1}\{\hat p_{npe} \ge q_{0.9,e}\},
+\]
+with pooled top-decile results used only as a robustness comparison.
+
+\subsection*{D.3 IO distribution and pattern checks}
+\appfig{io_3.png}{Within-exporter IO pattern check (supplementary).}
+\appfig{io_4.png}{Pooled exporter fixed-effects IO pattern check (supplementary).}
+
+The IO evidence is descriptive: it establishes a feasible link between model-based risk and network relevance, while indicating heterogeneity across exporters rather than a universal monotone gradient.
+
+\section*{Appendix E. Replication Assets}
+
+Primary output files used in this appendix:
+\begin{itemize}
+  \item \texttt{clean\_out/train\_notif\_hs4\_country\_level.csv}
+  \item \texttt{clean\_out/test\_predictions\_all\_models.csv}
+  \item \texttt{clean\_out/pred\_distilbert\_oos.csv}
+  \item \texttt{clean\_out/model\_comparison\_with\_distilbert.csv}
+  \item \texttt{clean\_out/test\_with\_io\_merged.csv}
+  \item \texttt{clean\_out/io\_risk\_diff\_in\_means.csv}
+  \item \texttt{clean\_out/io\_binned\_scatter\_data.csv}
+\end{itemize}
+
+\section*{Appendix F. Robustness to Alternative Outcome Definitions}
+
+\subsection*{F.1 Design and motivation}
+To assess whether findings depend critically on the baseline outcome threshold $\tau = -0.2231$ (20 log-points), we performed robustness checks across four alternative threshold definitions: $\theta \in \{0.10, 0.15, 0.20, 0.25\}$ measured in log-point units. For each threshold, all five models (Country-only, Text-only TF-IDF, Text+Country TF-IDF, Embeddings+Country SBERT, DistilBERT) were re-evaluated on the same 2024--2025 test set but with relabeled outcomes.
+
+This design isolates the effect of outcome definition while holding test data, temporal splits, and model specifications constant. The key question: \textit{do model rankings and relative performance remain stable across label definitions?}
+
+\subsection*{F.2 Robustness results: Average Precision}
+\begin{table}[H]
+\centering
+\caption{Average Precision across alternative outcome thresholds ($\theta$)}
+\label{tab:ap-theta}
+\begin{tabular}{lcccc}
+\toprule
+Model & $\theta=0.10$ & $\theta=0.15$ & $\theta=0.20$ & $\theta=0.25$ \\
+\midrule
+Country-only & 0.2831 & 0.2422 & 0.2138 & 0.1859 \\
+Text-only (TF-IDF) & 0.2504 & 0.2130 & 0.1776 & 0.1542 \\
+Text + Country (TF-IDF) & 0.2778 & 0.2440 & 0.2135 & 0.1896 \\
+Embeddings + Country (SBERT) & 0.2742 & 0.2390 & 0.2118 & 0.1853 \\
+DistilBERT & 0.2852 & 0.2464 & 0.2079 & 0.1849 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{F.3 Robustness results: ROC-AUC}
+\begin{table}[H]
+\centering
+\caption{ROC-AUC across alternative outcome thresholds}
+\label{tab:auc-theta}
+\begin{tabular}{lcccc}
+\toprule
+Model & $\theta=0.10$ & $\theta=0.15$ & $\theta=0.20$ & $\theta=0.25$ \\
+\midrule
+Country-only & 0.5687 & 0.5627 & 0.5785 & 0.5798 \\
+Text-only (TF-IDF) & 0.4967 & 0.4947 & 0.4970 & 0.4977 \\
+Text + Country (TF-IDF) & 0.5459 & 0.5521 & 0.5628 & 0.5715 \\
+Embeddings + Country (SBERT) & 0.5330 & 0.5352 & 0.5570 & 0.5634 \\
+DistilBERT & 0.5500 & 0.5510 & 0.5616 & 0.5646 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{F.4 Robustness results: Precision at Top 10\%}
+\begin{table}[H]
+\centering
+\caption{Precision@Top10\% across alternative outcome thresholds}
+\label{tab:p10-theta}
+\begin{tabular}{lcccc}
+\toprule
+Model & $\theta=0.10$ & $\theta=0.15$ & $\theta=0.20$ & $\theta=0.25$ \\
+\midrule
+Country-only & 0.2930 & 0.2651 & 0.2440 & 0.2104 \\
+Text-only (TF-IDF) & 0.2546 & 0.2085 & 0.1758 & 0.1604 \\
+Text + Country (TF-IDF) & 0.2930 & 0.2584 & 0.2305 & 0.2075 \\
+Embeddings + Country (SBERT) & 0.2997 & 0.2603 & 0.2459 & 0.2171 \\
+DistilBERT & 0.2939 & 0.2690 & 0.2267 & 0.2104 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{F.5 Key findings}
+
+\subsubsection*{Model ranking stability.}
+Across all three outcome thresholds and all four robustness scenarios, the relative ordering of models remains remarkably consistent:
+\begin{itemize}
+  \item DistilBERT is competitive or best-performing in Average Precision at $\theta \in \{0.10, 0.15\}$ and remains in the top tier at $\theta=0.20, 0.25$.
+  \item Text+Country (TF-IDF) and Embeddings+Country (SBERT) consistently rank second or third, showing that combining text with country features is robust.
+  \item Country-only maintains surprisingly strong AUC performance ($\approx 0.57$ across thetas), underscoring the importance of exporter heterogeneity.
+  \item Text-only (TF-IDF) is consistently the weakest baseline across all metrics and thresholds.
+\end{itemize}
+
+\subsubsection*{Metric stability.}
+Beyond ranking, absolute metric levels remain stable within reasonable bounds:
+\begin{itemize}
+  \item AUC ranges are tight: Country-only 0.56--0.58, DistilBERT 0.55--0.56, blended models 0.53--0.57. This indicates robust discriminative ability across label regimes.
+  \item From $\theta=0.20$ to $\theta=0.25$ (5 percentage-point shift in label severity), AP declines $\approx 10$--15\% but does not collapse, and relative rankings persist.
+  \item Precision@Top10\% shows similar stability, declining gracefully as the label becomes stricter.
+\end{itemize}
+
+\subsubsection*{Practical implications.}
+The robustness of DistilBERT and Text+Country models across outcome definitions supports using these approaches for notification risk ranking in production. A policymaker adopting a stricter or looser outcome definition would observe consistent relative performance.
+
+\subsection*{F.6 Limitations and future research}
+
+\subsubsection*{Single-epoch training.}
+The robustness results are based on one epoch of DistilBERT training per theta. While label-definition robustness (the focus here) is independent of deep learning hyperparameters, a more comprehensive evaluation would employ deeper training schedules (e.g., 5 epochs as in the main analysis) to isolate signal from initialization variance. Single-epoch runs are sufficient to validate that findings do not depend on label parametrization but do not rule out minor metric improvements under extended training.
+
+\subsubsection*{Threshold coverage.}
+The four thresholds ($\theta \in \{0.10, 0.15, 0.20, 0.25\}$) span a moderate window around the baseline. Extreme thresholds (e.g., $\theta < 0.05$ or $\theta > 0.30$) would yield sparser positive-class samples and may exhibit different stability patterns. Future work should explore boundary behavior, particularly when label prevalence becomes very rare ($< 5\%$).
+
+\subsubsection*{Cross-temporal robustness.}
+This appendix focuses on label-definition robustness within the 2024--2025 test window. Separate robustness checks (e.g., varying the post-notification observation window from 6 to 12 months) would strengthen generalization claims and are left to subsequent research.
+
+\section*{Appendix G. Interpretation Notes}
+\begin{itemize}
+  \item The main analysis is predictive, not causal.
+  \item IO relationships are descriptive and do not identify propagation effects.
+  \item Final evaluation is strictly out-of-sample on 2024--2025 notifications.
+  \item Robustness findings depend on single-epoch training; multi-epoch validation is a priority for future work.
+\end{itemize}
+
+\end{document}
