@@ -11,7 +11,7 @@ This repository contains the data, code, and outputs for my Big Data / NLP term 
 
 ## Main files
 - Poster: `poster/poster.pdf`
-- Main training script: `code/6_DistilBERT.ipynb`, `code/5_baseline_consolidated.ipynb`
+- Main training script: `code/5_analysis_master.ipynb`
 - Replication order: see below
 
 ## Replication steps
@@ -21,12 +21,11 @@ This repository contains the data, code, and outputs for my Big Data / NLP term 
    - `1_notifs_data.ipynb`
    - `2_usitc_data.ipynb`
    - `3_merging.ipynb`
-   - `4_labelling.ipynb`
-   - `5_baseline_consolidated.ipynb`
-   - `6_DistilBERT.ipynb`
-   - `7_IO_extension.ipynb`
-   - `8_results_figures.ipynb`
-4. Outputs will be saved in `outputs/`
+   - `4_labeling.ipynb`
+   - `5_analysis_master.ipynb`
+   - `6_IO_extension.ipynb`
+   - `7_robustness_outcome.ipynb`
+4. Main outputs are saved in `data/cleaned_data/` and figures in `fig/`.
 
 ## Data sources
 - ePing WTO SPS/TBT notifications
