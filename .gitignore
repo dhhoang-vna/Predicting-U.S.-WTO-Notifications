@@ -179,3 +179,9 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Project data artifacts (generated/large files)
+data/cleaned_data/distilbert_run/
+data/cleaned_data/distilbert_run_robust/
+data/cleaned_data/hs4_imports_with_notif_exposure.csv
+data/cleaned_data/train_notif_hs4_country_isic4_2digit_long.csv
