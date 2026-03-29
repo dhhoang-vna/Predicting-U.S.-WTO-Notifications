@@ -11,7 +11,7 @@
 
 % ---------- Graphics ----------
 \usepackage{graphicx}
-\graphicspath{{./}{figures/}{img/}} % add folders if needed
+\graphicspath{{./}{fig/}{../fig/}{figures/}{../figures/}{img/}{../img/}} % robust paths for compile from repo root or poster/
 
 % Counter for figure numbering
 \newcounter{postfigure}
@@ -25,7 +25,15 @@
     \IfFileExists{#2}{%
       \includegraphics[width=#1]{#2}%
     }{%
-      \fbox{\parbox{0.9\linewidth}{\centering Missing image file: \texttt{#2}}}%
+      \IfFileExists{fig/#2}{%
+        \includegraphics[width=#1]{fig/#2}%
+      }{%
+        \IfFileExists{../fig/#2}{%
+          \includegraphics[width=#1]{../fig/#2}%
+        }{%
+          \fbox{\parbox{0.9\linewidth}{\centering Missing image file: \texttt{\detokenize{#2}}}}%
+        }%
+      }%
     }\\[-3pt]
     {\footnotesize \textbf{Figure \thepostfigure:} #3}
   \end{center}%
@@ -124,7 +132,7 @@ This project contributes to several strands of literature. First, building on wo
 \block{Data}{
 \textbf{Notifications}: U.S. SPS and TBT notifications submitted to the WTO (2010--2025) are drawn from the ePing SPS \& TBT Platform. The corpus is dominated by TBT and SPS notifications; both are pooled because they can restrict access for the same targeted exporters through complementary legal mechanisms.
 
-\posterfig[0.8\linewidth]{notif_frequency.png}{Notification frequency over time}
+\posterfig[0.9\linewidth]{notif_frequency.png}{Notification frequency over time}
 
 \textbf{Trade panel}: Monthly U.S. import values by HS4 product and exporting country come from US International Trade Commission, for 8 Southeast Asian developing exporters (Cambodia, Indonesia, Laos, Malaysia, Myanmar, Philippines, Thailand, and Vietnam) across 964 HS4 codes.
 
@@ -188,7 +196,7 @@ I compare five models, chosen to separate exporter heterogeneity from textual si
 }
 
 \block{Results}{
-All metrics computed on the 2024–2025 test set (n = 10,404; k = 1,041 at top 10\%):
+Performance is evaluated using standard ranking metrics for imbalanced classification. All metrics computed on the 2024–2025 test set, with 10,404 triples from 428 notifications. 
 
 \vspace{6pt}
 
@@ -215,10 +223,10 @@ TF-IDF text-only         & 0.497          & 0.178          & 0.176          & 0.
 
 \textbf{Main findings}: First, text-only TF-IDF is essentially non-predictive, confirming that bag-of-words keyword frequency carries little signal on its own. Second, country identity alone outperforms the text-only specification, indicating strong cross-exporter heterogeneity in the probability of post-notification trade disruption. Third, DistilBERT performs best, showing that useful information in notification text is primarily semantic rather than lexical.
 
-\posterfig[0.8\linewidth]{precision_recall_curve.png}{Precision-Recall curves by model on the 2024--2025 test set}
+\posterfig[0.9\linewidth]{precision_recall_curve.png}{Precision-Recall curves by model on the 2024--2025 test set}
 
 On the test set, DistilBERT achieves ROC-AUC of 0.622 and Precision@10\% of 0.272, outperforming all other specifications. Among the top 10\% highest-risk cases, DistilBERT identifies substantially more positives than other models. Relative to the text-only baseline, DistilBERT improves Average Precision by approximately 36\%, and achieves a 51\% lift in top-decile precision relative to the base rate of 17.95\%.
-\posterfig[0.8\linewidth]{ranking_quality.png}{Horizontal bar chart of Precision@Top-10\% ("Ranking Quality in Highest-Risk Segment"), ranked descending. DistilBERT leads at 0.272; TF-IDF text-only trails at 0.176.}
+\posterfig[0.75\linewidth]{ranking_quality.png}{Precision@Top-10\% by model, with baseline rate for reference}
 }
 
 % ===================== Column 3 =====================
@@ -232,7 +240,7 @@ Using alternative outcome thresholds ($\theta=0.10,0.15,0.20,0.25$) with 1 epoch
 \block{IO Extension}{
 This is a descriptive proof-of-concept extension to assess where predicted high-risk notifications are concentrated in the production network, using HS4-ISIC concordances and country-sector IO measures. High-risk notifications are associated with higher centrality and downstream dependence, but the relationship is modest and heterogeneous across exporters.
 
-\posterfig[0.8\linewidth]{io_1.png}{IO centrality and downstream dependence for high-risk vs. rest triples}
+\posterfig[\linewidth]{io_1.png}{IO centrality and downstream dependence for high-risk vs. rest triples}
 
 The violin plots above compare the centrality of the sectors in the production network for high-risk triples (within-exporter top-decile DistilBERT score) versus the rest, faceted by Vietnam and Thailand - the two largest exporters in the final test set. High predicted-risk triples are more likely to concentrate in sectors with higher network centrality. A similar pattern appears for downstream dependence (see Appendix D). This provides descriptive evidence that disruptions in these sectors may propagate through domestic supply chains.
 }
@@ -246,6 +254,9 @@ However, this framework is predictive rather than causal. High-risk notification
 
 \block{References}{
 \fontsize{18}{21}\selectfont
+\textbf{Code and replication:} \href{https://github.com/dhhoang-vna/Predicting-U.S.-WTO-Notifications}{github.com/dhhoang-vna/Predicting-U.S.-WTO-Notifications}
+
+\vspace{4pt}
 \begin{enumerate}[leftmargin=*,itemsep=0.35em,topsep=0.2em]
   \item Acemoglu, D., Carvalho, V. M., Ozdaglar, A., \& Tahbaz-Salehi, A. (2012). The network origins of aggregate fluctuations. \textit{Econometrica, 80}(5), 1977--2016.
   \item Acemoglu, D., \& Tahbaz-Salehi, A. (2025). The macroeconomics of supply chain disruptions. \textit{Review of Economic Studies, 92}(2), 656--695.

@@ -12,7 +12,7 @@
 \usepackage{caption}
 \usepackage{setspace}
 
-\graphicspath{{./}{figures/}{img/}}
+\graphicspath{{./}{fig/}{../fig/}{figures/}{../figures/}{img/}{../img/}}
 \setstretch{1.1}
 
 % Safe figure macro for missing files
@@ -22,7 +22,15 @@
     \IfFileExists{#2}{%
       \includegraphics[width=#1]{#2}
     }{%
-      \fbox{\parbox{0.85\linewidth}{\centering Missing image file: \texttt{#2}}}
+      \IfFileExists{fig/#2}{%
+        \includegraphics[width=#1]{fig/#2}
+      }{%
+        \IfFileExists{../fig/#2}{%
+          \includegraphics[width=#1]{../fig/#2}
+        }{%
+          \fbox{\parbox{0.85\linewidth}{\centering Missing image file: \texttt{\detokenize{#2}}}}
+        }%
+      }%
     }
     \caption{#3}
   \end{figure}
